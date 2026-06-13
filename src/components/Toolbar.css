@@ -1,0 +1,223 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  height: 56px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.toolbar__left,
+.toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.toolbar__center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.toolbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  color: inherit;
+  max-width: 220px;
+}
+
+.toolbar__brand:hover {
+  background: var(--bg-hover);
+}
+
+.toolbar__logo {
+  background: var(--accent);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.toolbar__filename {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toolbar__divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 0.25rem;
+}
+
+.toolbar__tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.toolbar__tool:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.toolbar__tool--active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.toolbar__text-controls {
+  gap: 0.5rem;
+}
+
+.toolbar__select {
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.toolbar__colors {
+  display: flex;
+  gap: 4px;
+}
+
+.toolbar__color {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s;
+}
+
+.toolbar__color:hover {
+  transform: scale(1.1);
+}
+
+.toolbar__color--active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--bg-surface);
+}
+
+.toolbar__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.toolbar__icon-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.toolbar__icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.toolbar__icon-btn--danger:hover {
+  background: var(--danger-subtle);
+  color: var(--danger);
+}
+
+.toolbar__zoom {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar__page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toolbar__page-info {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  min-width: 56px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar__download {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.toolbar__download:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.toolbar__download:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.toolbar--minimal .toolbar__center {
+  display: flex;
+}

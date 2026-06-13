@@ -1,0 +1,155 @@
+.text-block {
+  position: absolute;
+  padding: 4px 6px;
+  border: 1.5px solid transparent;
+  border-radius: 3px;
+  line-height: 1.25;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: none;
+  z-index: 2;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* PDF text blocks — dashed outline visible until selected */
+.text-block--pdf {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px dashed #94a3b8;
+}
+
+.text-block--pdf.text-block--selected,
+.text-block--pdf.text-block--editing {
+  border: 2px solid var(--accent);
+  border-style: solid;
+  background: rgba(37, 99, 235, 0.08);
+  z-index: 3;
+}
+
+/* User-added text boxes — solid white, no border unless active */
+.text-block--user {
+  background: #ffffff;
+  border: 1.5px solid transparent;
+  z-index: 3;
+}
+
+.text-block--user.text-block--selected,
+.text-block--user.text-block--editing,
+.text-block--user.text-block--resizing {
+  border: 2px solid var(--accent);
+  background: #ffffff;
+  z-index: 4;
+  overflow: visible;
+  resize: both;
+  min-width: 48px;
+  min-height: 24px;
+}
+
+.text-block--dragging,
+.text-block--resizing {
+  opacity: 0.95;
+  z-index: 5;
+}
+
+.text-block__label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.text-block--selected .text-block__label {
+  pointer-events: none;
+}
+
+.text-block__input {
+  display: block;
+  border: none;
+  outline: none;
+  background: #ffffff;
+  resize: none;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 1.25;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.text-block__handles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.text-block__handle {
+  position: absolute;
+  pointer-events: auto;
+  background: white;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+  touch-action: none;
+}
+
+/* Corner handles — larger hit area */
+.text-block__handle--nw,
+.text-block__handle--ne,
+.text-block__handle--sw,
+.text-block__handle--se {
+  width: 12px;
+  height: 12px;
+}
+
+.text-block__handle--nw {
+  top: -7px;
+  left: -7px;
+  cursor: nwse-resize;
+}
+
+.text-block__handle--ne {
+  top: -7px;
+  right: -7px;
+  cursor: nesw-resize;
+}
+
+.text-block__handle--sw {
+  bottom: -7px;
+  left: -7px;
+  cursor: nesw-resize;
+}
+
+.text-block__handle--se {
+  bottom: -7px;
+  right: -7px;
+  cursor: nwse-resize;
+}
+
+/* Edge handles */
+.text-block__handle--e,
+.text-block__handle--s {
+  background: var(--accent);
+  border-color: white;
+}
+
+.text-block__handle--e {
+  top: 50%;
+  right: -6px;
+  width: 8px;
+  height: 28px;
+  margin-top: -14px;
+  cursor: ew-resize;
+  border-radius: 3px;
+}
+
+.text-block__handle--s {
+  bottom: -6px;
+  left: 50%;
+  width: 28px;
+  height: 8px;
+  margin-left: -14px;
+  cursor: ns-resize;
+  border-radius: 3px;
+}

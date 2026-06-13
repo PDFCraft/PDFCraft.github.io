@@ -1,0 +1,72 @@
+.editor-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.editor-layout__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-layout--loading {
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-loading {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.editor-loading__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.editor-loading--error p {
+  color: var(--danger);
+  margin-bottom: 1rem;
+}
+
+.editor-loading--error button {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.editor-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 1rem;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  gap: 1rem;
+}
+
+.editor-status__privacy {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .editor-status__privacy {
+    display: none;
+  }
+}
