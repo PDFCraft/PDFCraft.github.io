@@ -28,7 +28,7 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          PAGES_BASE: '/clearpdf-editor/'
+          PAGES_BASE: '/'
 
       - uses: actions/upload-pages-artifact@v3
         with:

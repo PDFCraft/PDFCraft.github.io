@@ -2,7 +2,7 @@
 
 Edit PDF text in your browser — upload, add and resize text boxes, and download. Everything runs locally; your files never leave your device.
 
-**Live demo:** [https://clearpdf-editor.github.io/](https://clearpdf-editor.github.io/)
+**Live demo:** [https://pdfcraft.github.io/](https://pdfcraft.github.io/)
 
 ## Features
 
