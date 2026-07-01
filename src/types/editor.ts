@@ -73,7 +73,8 @@ export interface SavedEditorState {
   inkStyle: InkStyle
   zoom: number
   currentPage: number
-  extractedPages: number[]
+  /** @deprecated Legacy sessions may include this; no longer used. */
+  extractedPages?: number[]
 }
 
 export interface SignaturePlacement {

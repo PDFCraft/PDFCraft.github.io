@@ -144,7 +144,9 @@ export function PdfPage({
     }
   }
 
-  const pageBlocks = blocks.filter((b) => b.pageIndex === pageIndex && !b.deleted)
+  const pageBlocks = blocks.filter(
+    (b) => b.pageIndex === pageIndex && !b.deleted && b.source === 'user',
+  )
   const pageSignatures = signatures.filter((s) => s.pageIndex === pageIndex)
 
   return (

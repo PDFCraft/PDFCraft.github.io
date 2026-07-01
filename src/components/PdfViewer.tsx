@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
 import type { EditorTool, InkStroke, InkStyle, SignaturePlacement, TextBlock } from '../types/editor'
-import { extractPageText } from '../lib/extractPageText'
 import { PdfPage } from './PdfPage'
 import './PdfViewer.css'
 
@@ -18,7 +17,6 @@ interface PdfViewerProps {
   inkStyle: InkStyle
   selectedId: string | null
   selectedSignatureId: string | null
-  extractedPages: number[]
   onSelect: (id: string | null) => void
   onSelectSignature: (id: string | null) => void
   onUpdateBlock: (id: string, patch: Partial<TextBlock>) => void
@@ -29,7 +27,6 @@ interface PdfViewerProps {
   onPlaceSignature: (pageIndex: number, x: number, y: number) => void
   onStrokeStart: (pageIndex: number, point: { x: number; y: number }, tool: 'pen' | 'highlighter') => string
   onStrokeAppend: (id: string, point: { x: number; y: number }) => void
-  onPageBlocksExtracted: (pageIndex: number, blocks: TextBlock[]) => void
 }
 
 function computeFitScale(containerWidth: number, pageWidth: number) {
@@ -51,7 +48,6 @@ export function PdfViewer({
   inkStyle,
   selectedId,
   selectedSignatureId,
-  extractedPages,
   onSelect,
   onSelectSignature,
   onUpdateBlock,
@@ -62,18 +58,12 @@ export function PdfViewer({
   onPlaceSignature,
   onStrokeStart,
   onStrokeAppend,
-  onPageBlocksExtracted,
 }: PdfViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState<PDFPageProxy | null>(null)
   const [pageLoading, setPageLoading] = useState(true)
   const [pageError, setPageError] = useState<string | null>(null)
   const fitApplied = useRef(false)
-  const extractedRef = useRef(new Set<number>(extractedPages))
-
-  useEffect(() => {
-    extractedRef.current = new Set(extractedPages)
-  }, [extractedPages])
 
   useEffect(() => {
     let cancelled = false
@@ -87,12 +77,6 @@ export function PdfViewer({
 
         setPage(loaded)
         setPageLoading(false)
-
-        if (!extractedRef.current.has(currentPage)) {
-          extractedRef.current.add(currentPage)
-          const pdfBlocks = await extractPageText(loaded, currentPage)
-          if (!cancelled) onPageBlocksExtracted(currentPage, pdfBlocks)
-        }
 
         if (!fitApplied.current && viewerRef.current) {
           const baseViewport = loaded.getViewport({ scale: 1 })
@@ -113,11 +97,10 @@ export function PdfViewer({
     return () => {
       cancelled = true
     }
-  }, [pdf, currentPage, onPageBlocksExtracted, onScaleChange])
+  }, [pdf, currentPage, onScaleChange])
 
   useEffect(() => {
     fitApplied.current = false
-    extractedRef.current = new Set()
   }, [pdf])
 
   const cursorClass =

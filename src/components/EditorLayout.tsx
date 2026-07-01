@@ -212,7 +212,6 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
           inkStyle={editor.inkStyle}
           selectedId={editor.selectedId}
           selectedSignatureId={editor.selectedSignatureId}
-          extractedPages={editor.extractedPages}
           onSelect={editor.setSelectedId}
           onSelectSignature={editor.setSelectedSignatureId}
           onUpdateBlock={editor.updateBlock}
@@ -223,7 +222,6 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
           onPlaceSignature={editor.placeSignature}
           onStrokeStart={editor.startStroke}
           onStrokeAppend={editor.appendStrokePoint}
-          onPageBlocksExtracted={editor.addPageBlocks}
         />
       </div>
 

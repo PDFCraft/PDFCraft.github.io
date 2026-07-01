@@ -23,7 +23,9 @@ const DEFAULT_STYLE: TextStyle = {
 
 export function useEditorState(initial?: SavedEditorState) {
   const [tool, setToolState] = useState<EditorTool>(initial?.tool ?? 'select')
-  const [blocks, setBlocks] = useState<TextBlock[]>(initial?.blocks ?? [])
+  const [blocks, setBlocks] = useState<TextBlock[]>(() =>
+    (initial?.blocks ?? []).filter((b) => b.source === 'user'),
+  )
   const [strokes, setStrokes] = useState<InkStroke[]>(initial?.strokes ?? [])
   const [signatures, setSignatures] = useState<SignaturePlacement[]>(initial?.signatures ?? [])
   const [pendingSignatureImage, setPendingSignatureImage] = useState<string | null>(null)
@@ -33,13 +35,6 @@ export function useEditorState(initial?: SavedEditorState) {
   const [inkStyle, setInkStyle] = useState<InkStyle>(initial?.inkStyle ?? DEFAULT_INK_STYLE)
   const [zoom, setZoom] = useState(initial?.zoom ?? 1)
   const [currentPage, setCurrentPage] = useState(initial?.currentPage ?? 0)
-  const [extractedPages, setExtractedPages] = useState<number[]>(() => {
-    if (initial?.extractedPages?.length) return initial.extractedPages
-    if (initial?.blocks?.length) {
-      return [...new Set(initial.blocks.map((b) => b.pageIndex))]
-    }
-    return []
-  })
 
   const selectedBlock = blocks.find((b) => b.id === selectedId && !b.deleted) ?? null
   const selectedSignature =
@@ -100,15 +95,6 @@ export function useEditorState(initial?: SavedEditorState) {
   const deleteSignature = useCallback((id: string) => {
     setSignatures((prev) => prev.filter((s) => s.id !== id))
     setSelectedSignatureId((cur) => (cur === id ? null : cur))
-  }, [])
-
-  const addPageBlocks = useCallback((pageIndex: number, pdfBlocks: TextBlock[]) => {
-    setExtractedPages((prev) => (prev.includes(pageIndex) ? prev : [...prev, pageIndex]))
-    setBlocks((prev) => {
-      const userBlocks = prev.filter((b) => b.pageIndex === pageIndex && b.source === 'user')
-      const other = prev.filter((b) => b.pageIndex !== pageIndex)
-      return [...other, ...pdfBlocks, ...userBlocks]
-    })
   }, [])
 
   const addTextField = useCallback(
@@ -213,7 +199,6 @@ export function useEditorState(initial?: SavedEditorState) {
     setCurrentPage(0)
     setTextStyle(DEFAULT_STYLE)
     setInkStyle(DEFAULT_INK_STYLE)
-    setExtractedPages([])
   }, [])
 
   const snapshot = useMemo(
@@ -226,9 +211,8 @@ export function useEditorState(initial?: SavedEditorState) {
       inkStyle,
       zoom,
       currentPage,
-      extractedPages,
     }),
-    [blocks, strokes, signatures, tool, textStyle, inkStyle, zoom, currentPage, extractedPages],
+    [blocks, strokes, signatures, tool, textStyle, inkStyle, zoom, currentPage],
   )
 
   const hasChanges = useMemo(() => {
@@ -257,7 +241,6 @@ export function useEditorState(initial?: SavedEditorState) {
     placeSignature,
     updateSignature,
     deleteSignature,
-    addPageBlocks,
     addTextField,
     updateBlock,
     deleteBlock,
@@ -269,7 +252,6 @@ export function useEditorState(initial?: SavedEditorState) {
     setZoom,
     currentPage,
     setCurrentPage,
-    extractedPages,
     reset,
     snapshot,
     hasChanges,
