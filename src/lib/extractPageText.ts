@@ -90,7 +90,11 @@ function deduplicateBlocks(blocks: BlockDraft[]): BlockDraft[] {
   const kept: BlockDraft[] = []
 
   for (const block of sorted) {
-    if (block.text.length <= 2) continue
+    // Short labels (e.g. "A", "1") skip dedup but must still be kept
+    if (block.text.length <= 2) {
+      kept.push(block)
+      continue
+    }
 
     let merged = false
     for (let i = 0; i < kept.length; i++) {
