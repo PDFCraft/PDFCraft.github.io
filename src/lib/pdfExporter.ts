@@ -1,7 +1,8 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import type { TextBlock } from '../types/editor'
 
-const WHITE_OUT_PADDING = 10
+/** Small bleed so anti-aliased PDF text edges are fully covered. */
+const WHITE_OUT_PADDING = 2
 
 function hexToRgb(hex: string) {
   const normalized = hex.replace('#', '')
@@ -26,19 +27,25 @@ interface TopBounds {
   height: number
 }
 
-/** Bounds in top-left coordinates (same as editor state). */
-function getCoverBounds(block: TextBlock): TopBounds {
+function getCurrentBounds(block: TextBlock): TopBounds {
+  return { x: block.x, y: block.y, width: block.width, height: block.height }
+}
+
+function positionMoved(block: TextBlock, original: TopBounds): boolean {
+  return Math.abs(block.x - original.x) > 1 || Math.abs(block.y - original.y) > 1
+}
+
+/** White-out regions matching the visible box; only include original PDF location when text was moved. */
+function getWhiteOutRegions(block: TextBlock): TopBounds[] {
+  const current = getCurrentBounds(block)
+  const regions: TopBounds[] = [current]
+
   const original = block.originalBounds
-  if (!original) {
-    return { x: block.x, y: block.y, width: block.width, height: block.height }
+  if (original && block.source === 'pdf' && positionMoved(block, original)) {
+    regions.push(original)
   }
 
-  const x = Math.min(block.x, original.x)
-  const y = Math.min(block.y, original.y)
-  const right = Math.max(block.x + block.width, original.x + original.width)
-  const bottom = Math.max(block.y + block.height, original.y + original.height)
-
-  return { x, y, width: right - x, height: bottom - y }
+  return regions
 }
 
 function shouldWhiteOut(block: TextBlock): boolean {
@@ -86,10 +93,12 @@ export async function exportPdfWithEdits(
     const page = pdfDoc.getPage(pageIndex)
     const { height: pageHeight } = page.getSize()
 
-    // Pass 1: white-out every edited, deleted, or user-added region
+    // Pass 1: white-out only the visible box (and former location if text was moved)
     for (const block of pageBlocks) {
       if (!shouldWhiteOut(block)) continue
-      drawWhiteOut(page, pageHeight, getCoverBounds(block))
+      for (const region of getWhiteOutRegions(block)) {
+        drawWhiteOut(page, pageHeight, region)
+      }
     }
 
     // Pass 2: draw replacement / new text on top
