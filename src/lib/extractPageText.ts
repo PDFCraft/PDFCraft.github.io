@@ -12,7 +12,9 @@ interface RawItem {
   fontSize: number
 }
 
-function mergeLineItems(line: RawItem[]): Omit<TextBlock, 'id' | 'pageIndex'> {
+type BlockDraft = Omit<TextBlock, 'id' | 'pageIndex'>
+
+function mergeLineItems(line: RawItem[]): BlockDraft {
   line.sort((a, b) => a.x - b.x)
   const text = line.map((i) => i.str).join(' ').replace(/\s+/g, ' ').trim()
   const x = line[0].x
@@ -39,6 +41,93 @@ function mergeLineItems(line: RawItem[]): Omit<TextBlock, 'id' | 'pageIndex'> {
     source: 'pdf',
     originalBounds: { x, y, width, height },
   }
+}
+
+function normalizeText(text: string): string {
+  return text.replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
+function overlapRatio(a: TopBounds, b: TopBounds): number {
+  const overlapX = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
+  const overlapY = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
+  const intersection = overlapX * overlapY
+  const smallerArea = Math.min(a.width * a.height, b.width * b.height)
+  return smallerArea > 0 ? intersection / smallerArea : 0
+}
+
+interface TopBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+function mergeBounds(a: TopBounds, b: TopBounds): TopBounds {
+  const x = Math.min(a.x, b.x)
+  const y = Math.min(a.y, b.y)
+  const right = Math.max(a.x + a.width, b.x + b.width)
+  const bottom = Math.max(a.y + a.height, b.y + b.height)
+  return { x, y, width: right - x, height: bottom - y }
+}
+
+function textsSimilar(a: string, b: string): boolean {
+  const left = normalizeText(a)
+  const right = normalizeText(b)
+  if (!left || !right) return false
+  if (left === right) return true
+  if (left.length >= 4 && right.length >= 4 && (left.includes(right) || right.includes(left))) {
+    return true
+  }
+  const shorter = left.length <= right.length ? left : right
+  const longer = left.length > right.length ? left : right
+  if (shorter.length >= 3 && longer.includes(shorter)) return true
+  return false
+}
+
+/** Remove ghost/duplicate text layers common after re-exporting edited PDFs. */
+function deduplicateBlocks(blocks: BlockDraft[]): BlockDraft[] {
+  const sorted = [...blocks].sort((a, b) => b.width * b.height - a.width * a.height)
+  const kept: BlockDraft[] = []
+
+  for (const block of sorted) {
+    if (block.text.length <= 2) continue
+
+    let merged = false
+    for (let i = 0; i < kept.length; i++) {
+      const existing = kept[i]
+      const overlap = overlapRatio(existing, block)
+
+      if (overlap > 0.35 && textsSimilar(existing.text, block.text)) {
+        if (block.text.length > existing.text.length) {
+          const bounds = mergeBounds(existing, block)
+          kept[i] = {
+            ...block,
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            originalBounds: bounds,
+          }
+        }
+        merged = true
+        break
+      }
+
+      // Drop tiny fragments sitting inside a larger block with similar content
+      if (
+        block.text.length <= 4 &&
+        overlap > 0.6 &&
+        textsSimilar(existing.text, block.text)
+      ) {
+        merged = true
+        break
+      }
+    }
+
+    if (!merged) kept.push(block)
+  }
+
+  return kept
 }
 
 export async function extractPageText(
@@ -85,7 +174,7 @@ export async function extractPageText(
   const lineBlocks = lines.map((line) => mergeLineItems(line))
 
   // Merge lines into paragraph blocks (Acrobat-style larger rectangles)
-  const paragraphs: Omit<TextBlock, 'id' | 'pageIndex'>[] = []
+  const paragraphs: BlockDraft[] = []
   let current = lineBlocks[0]
 
   for (let i = 1; i < lineBlocks.length; i++) {
@@ -94,20 +183,15 @@ export async function extractPageText(
     const sameColumn = Math.abs(next.x - current.x) < current.width * 0.5
 
     if (gap < current.fontSize * 1.2 && sameColumn) {
-      const x = Math.min(current.x, next.x)
-      const y = current.y
-      const right = Math.max(current.x + current.width, next.x + next.width)
-      const bottom = Math.max(current.y + current.height, next.y + next.height)
-      const width = right - x
-      const height = bottom - y
+      const bounds = mergeBounds(current, next)
       current = {
         ...current,
         text: `${current.text} ${next.text}`.trim(),
-        x,
-        y,
-        width,
-        height,
-        originalBounds: { x, y, width, height },
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        originalBounds: bounds,
       }
     } else {
       paragraphs.push(current)
@@ -116,7 +200,9 @@ export async function extractPageText(
   }
   paragraphs.push(current)
 
-  return paragraphs.map((p) => ({
+  const deduped = deduplicateBlocks(paragraphs)
+
+  return deduped.map((p) => ({
     ...p,
     id: uuidv4(),
     pageIndex,
