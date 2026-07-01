@@ -1,9 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { PDFPageProxy } from 'pdfjs-dist'
 import type { RenderTask } from 'pdfjs-dist'
-import type { EditorTool, InkStroke, InkStyle, TextBlock } from '../types/editor'
+import type { EditorTool, InkStroke, InkStyle, SignaturePlacement, TextBlock } from '../types/editor'
 import { EditableTextBlock } from './EditableTextBlock'
 import { InkLayer } from './InkLayer'
+import { PlacedSignature } from './PlacedSignature'
 import './PdfPage.css'
 
 interface PdfPageProps {
@@ -12,12 +13,18 @@ interface PdfPageProps {
   scale: number
   blocks: TextBlock[]
   strokes: InkStroke[]
+  signatures: SignaturePlacement[]
   inkStyle: InkStyle
   selectedId: string | null
+  selectedSignatureId: string | null
   onSelect: (id: string | null) => void
+  onSelectSignature: (id: string | null) => void
   onUpdateBlock: (id: string, patch: Partial<TextBlock>) => void
   onDeleteBlock: (id: string) => void
+  onUpdateSignature: (id: string, patch: Partial<SignaturePlacement>) => void
+  onDeleteSignature: (id: string) => void
   onAddText: (pageIndex: number, pdfX: number, pdfY: number) => void
+  onPlaceSignature: (pageIndex: number, pdfX: number, pdfY: number) => void
   onStrokeStart: (pageIndex: number, point: { x: number; y: number }, tool: 'pen' | 'highlighter') => string
   onStrokeAppend: (id: string, point: { x: number; y: number }) => void
   tool: EditorTool
@@ -29,12 +36,18 @@ export function PdfPage({
   scale,
   blocks,
   strokes,
+  signatures,
   inkStyle,
   selectedId,
+  selectedSignatureId,
   onSelect,
+  onSelectSignature,
   onUpdateBlock,
   onDeleteBlock,
+  onUpdateSignature,
+  onDeleteSignature,
   onAddText,
+  onPlaceSignature,
   onStrokeStart,
   onStrokeAppend,
   tool,
@@ -104,26 +117,39 @@ export function PdfPage({
   }, [page, scale])
 
   const handlePageMouseDown = (e: React.MouseEvent) => {
-    if (isDrawingTool) return
-    if ((e.target as HTMLElement).closest('.text-block')) return
-    if (tool === 'select') onSelect(null)
+    if (isDrawingTool || tool === 'signature') return
+    if ((e.target as HTMLElement).closest('.text-block, .placed-signature')) return
+    if (tool === 'select') {
+      onSelect(null)
+      onSelectSignature(null)
+    }
   }
 
   const handlePageClick = (e: React.MouseEvent) => {
-    if (tool !== 'text') return
-    if ((e.target as HTMLElement).closest('.text-block')) return
+    if ((e.target as HTMLElement).closest('.text-block, .placed-signature')) return
 
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
 
-    onAddText(pageIndex, (e.clientX - rect.left) / scale, (e.clientY - rect.top) / scale)
+    const pdfX = (e.clientX - rect.left) / scale
+    const pdfY = (e.clientY - rect.top) / scale
+
+    if (tool === 'text') {
+      onAddText(pageIndex, pdfX, pdfY)
+      return
+    }
+
+    if (tool === 'signature') {
+      onPlaceSignature(pageIndex, pdfX, pdfY)
+    }
   }
 
   const pageBlocks = blocks.filter((b) => b.pageIndex === pageIndex && !b.deleted)
+  const pageSignatures = signatures.filter((s) => s.pageIndex === pageIndex)
 
   return (
     <div
-      className="pdf-page"
+      className={`pdf-page ${tool === 'signature' ? 'pdf-page--place-signature' : ''}`}
       ref={containerRef}
       style={{ width: displaySize.width || undefined, height: displaySize.height || undefined }}
       onMouseDown={handlePageMouseDown}
@@ -153,7 +179,22 @@ export function PdfPage({
             onDelete={() => onDeleteBlock(block.id)}
           />
         ))}
+        {pageSignatures.map((sig) => (
+          <PlacedSignature
+            key={sig.id}
+            signature={sig}
+            scale={scale}
+            selected={selectedSignatureId === sig.id}
+            tool={tool}
+            onSelect={() => onSelectSignature(sig.id)}
+            onUpdate={(patch) => onUpdateSignature(sig.id, patch)}
+            onDelete={() => onDeleteSignature(sig.id)}
+          />
+        ))}
       </div>
+      {tool === 'signature' && (
+        <div className="pdf-page__place-hint">Click where you want to place your signature</div>
+      )}
       {status === 'loading' && <div className="pdf-page__loading">Rendering page…</div>}
       {status === 'error' && (
         <div className="pdf-page__loading pdf-page__loading--error">{error}</div>

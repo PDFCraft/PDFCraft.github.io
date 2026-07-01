@@ -166,6 +166,27 @@
   color: var(--accent);
 }
 
+.edit-sidebar__sign-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-sidebar__sign-btn:hover {
+  background: var(--accent-hover);
+}
+
 .edit-sidebar__tools {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

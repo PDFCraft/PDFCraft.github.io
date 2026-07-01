@@ -161,7 +161,7 @@ export function EditableTextBlock({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (tool === 'text' || tool === 'pen' || tool === 'highlighter' || resizing) return
+      if (tool === 'text' || tool === 'pen' || tool === 'highlighter' || tool === 'signature' || resizing) return
       if ((e.target as HTMLElement).closest('.text-block__handle')) return
 
       e.stopPropagation()
@@ -250,7 +250,7 @@ export function EditableTextBlock({
               : tool === 'select' && !editing
                 ? 'grab'
                 : 'text',
-        pointerEvents: tool === 'pen' || tool === 'highlighter' ? 'none' : undefined,
+        pointerEvents: tool === 'pen' || tool === 'highlighter' || tool === 'signature' ? 'none' : undefined,
       }}
       onMouseDown={handleMouseDown}
       onClick={(e) => e.stopPropagation()}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
-import type { EditorTool, InkStroke, InkStyle, TextBlock } from '../types/editor'
+import type { EditorTool, InkStroke, InkStyle, SignaturePlacement, TextBlock } from '../types/editor'
 import { extractPageText } from '../lib/extractPageText'
 import { PdfPage } from './PdfPage'
 import './PdfViewer.css'
@@ -14,13 +14,19 @@ interface PdfViewerProps {
   tool: EditorTool
   blocks: TextBlock[]
   strokes: InkStroke[]
+  signatures: SignaturePlacement[]
   inkStyle: InkStyle
   selectedId: string | null
+  selectedSignatureId: string | null
   extractedPages: number[]
   onSelect: (id: string | null) => void
+  onSelectSignature: (id: string | null) => void
   onUpdateBlock: (id: string, patch: Partial<TextBlock>) => void
   onDeleteBlock: (id: string) => void
+  onUpdateSignature: (id: string, patch: Partial<SignaturePlacement>) => void
+  onDeleteSignature: (id: string) => void
   onAddText: (pageIndex: number, x: number, y: number) => void
+  onPlaceSignature: (pageIndex: number, x: number, y: number) => void
   onStrokeStart: (pageIndex: number, point: { x: number; y: number }, tool: 'pen' | 'highlighter') => string
   onStrokeAppend: (id: string, point: { x: number; y: number }) => void
   onPageBlocksExtracted: (pageIndex: number, blocks: TextBlock[]) => void
@@ -41,13 +47,19 @@ export function PdfViewer({
   tool,
   blocks,
   strokes,
+  signatures,
   inkStyle,
   selectedId,
+  selectedSignatureId,
   extractedPages,
   onSelect,
+  onSelectSignature,
   onUpdateBlock,
   onDeleteBlock,
+  onUpdateSignature,
+  onDeleteSignature,
   onAddText,
+  onPlaceSignature,
   onStrokeStart,
   onStrokeAppend,
   onPageBlocksExtracted,
@@ -109,7 +121,9 @@ export function PdfViewer({
   }, [pdf])
 
   const cursorClass =
-    tool === 'text' || tool === 'pen' || tool === 'highlighter' ? 'pdf-viewer--draw' : ''
+    tool === 'text' || tool === 'pen' || tool === 'highlighter' || tool === 'signature'
+      ? 'pdf-viewer--draw'
+      : ''
 
   return (
     <div ref={viewerRef} className={`pdf-viewer ${cursorClass}`}>
@@ -130,12 +144,18 @@ export function PdfViewer({
             scale={scale}
             blocks={blocks}
             strokes={strokes}
+            signatures={signatures}
             inkStyle={inkStyle}
             selectedId={selectedId}
+            selectedSignatureId={selectedSignatureId}
             onSelect={onSelect}
+            onSelectSignature={onSelectSignature}
             onUpdateBlock={onUpdateBlock}
             onDeleteBlock={onDeleteBlock}
+            onUpdateSignature={onUpdateSignature}
+            onDeleteSignature={onDeleteSignature}
             onAddText={onAddText}
+            onPlaceSignature={onPlaceSignature}
             onStrokeStart={onStrokeStart}
             onStrokeAppend={onStrokeAppend}
             tool={tool}

@@ -86,5 +86,6 @@ export function hasEditorChanges(editor: SavedEditorState): boolean {
     (b) => b.source === 'user' || b.modified || b.deleted,
   )
   const hasStrokes = editor.strokes.some((s) => s.points.length >= 2)
-  return hasBlockEdits || hasStrokes
+  const hasSignatures = (editor.signatures?.length ?? 0) > 0
+  return hasBlockEdits || hasStrokes || hasSignatures
 }

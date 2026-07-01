@@ -1,4 +1,4 @@
-export type EditorTool = 'select' | 'text' | 'pen' | 'highlighter'
+export type EditorTool = 'select' | 'text' | 'pen' | 'highlighter' | 'signature'
 
 export interface TextBlock {
   id: string
@@ -67,12 +67,23 @@ export interface TextStyle {
 export interface SavedEditorState {
   blocks: TextBlock[]
   strokes: InkStroke[]
+  signatures: SignaturePlacement[]
   tool: EditorTool
   textStyle: TextStyle
   inkStyle: InkStyle
   zoom: number
   currentPage: number
   extractedPages: number[]
+}
+
+export interface SignaturePlacement {
+  id: string
+  pageIndex: number
+  x: number
+  y: number
+  width: number
+  height: number
+  imageDataUrl: string
 }
 
 export interface SavedSession {

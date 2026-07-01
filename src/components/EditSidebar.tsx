@@ -1,6 +1,6 @@
 import type { EditorTool, InkStyle, TextBlock, TextStyle } from '../types/editor'
 import { FONT_OPTIONS, HIGHLIGHTER_WIDTHS, INK_COLORS, PEN_WIDTHS } from '../types/editor'
-import { IconHighlighter, IconPen, IconSelect, IconText, IconTrash } from './icons'
+import { IconHighlighter, IconPen, IconSelect, IconSign, IconText, IconTrash } from './icons'
 import './EditSidebar.css'
 
 interface EditSidebarProps {
@@ -12,6 +12,7 @@ interface EditSidebarProps {
   onStyleChange: (style: Partial<TextStyle>) => void
   onInkStyleChange: (style: Partial<InkStyle>) => void
   onDelete: () => void
+  onOpenSignature: () => void
   pageCount: number
   currentPage: number
   onPageChange: (page: number) => void
@@ -29,6 +30,7 @@ export function EditSidebar({
   onStyleChange,
   onInkStyleChange,
   onDelete,
+  onOpenSignature,
   pageCount,
   currentPage,
   onPageChange,
@@ -96,9 +98,15 @@ export function EditSidebar({
         )}
         {tool === 'select' && (
           <p className="edit-sidebar__hint">
-            Select text boxes to edit · Drag to move · Double-click to edit
+            Select text or signatures to move · Double-click text to edit
           </p>
         )}
+
+        <button type="button" className="edit-sidebar__sign-btn" onClick={onOpenSignature}>
+          <IconSign />
+          <span>Sign document</span>
+        </button>
+        <p className="edit-sidebar__hint">Draw, type, or upload your signature — like DocuSign</p>
       </div>
 
       {isInkTool && (

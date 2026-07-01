@@ -1,0 +1,226 @@
+.signature-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.signature-modal {
+  width: 100%;
+  max-width: 620px;
+  background: var(--bg-surface);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.signature-modal__header {
+  position: relative;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.signature-modal__header h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.signature-modal__header p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.signature-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 6px;
+}
+
+.signature-modal__close:hover {
+  background: var(--bg-hover);
+}
+
+.signature-modal__saved {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 1.5rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-base);
+}
+
+.signature-modal__saved img {
+  display: block;
+  max-height: 48px;
+  max-width: 200px;
+  margin-top: 0.35rem;
+}
+
+.signature-modal__use-saved {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.signature-modal__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem 0;
+}
+
+.signature-modal__tab {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-base);
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.signature-modal__tab--active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.signature-modal__body {
+  padding: 1rem 1.5rem;
+  min-height: 220px;
+}
+
+.signature-modal__pad-wrap {
+  position: relative;
+}
+
+.signature-modal__pad {
+  width: 100%;
+  height: 180px;
+  border: 2px dashed var(--border-strong);
+  border-radius: 10px;
+  background: white;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.signature-modal__clear {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.signature-modal__type label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.signature-modal__type label span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.signature-modal__type input {
+  height: 38px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.signature-modal__upload-btn {
+  display: inline-flex;
+  padding: 0.6rem 1rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--accent);
+}
+
+.signature-modal__preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  text-align: center;
+}
+
+.signature-modal__preview img {
+  max-width: 100%;
+  max-height: 100px;
+}
+
+.signature-modal__remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.signature-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-base);
+}
+
+.signature-modal__cancel {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+.signature-modal__adopt {
+  padding: 0.55rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signature-modal__adopt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

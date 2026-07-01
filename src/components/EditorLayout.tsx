@@ -6,6 +6,7 @@ import { useEditorState } from '../hooks/useEditorState'
 import { usePdfDocument } from '../hooks/usePdfDocument'
 import { EditSidebar } from './EditSidebar'
 import { PdfViewer } from './PdfViewer'
+import { SignatureModal } from './SignatureModal'
 import { Toolbar } from './Toolbar'
 import './EditorLayout.css'
 
@@ -21,6 +22,7 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
   const [downloading, setDownloading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveNotice, setSaveNotice] = useState<string | null>(null)
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false)
   const saveTimerRef = useRef<number | null>(null)
 
   const totalPages = pageCount || document.pageCount || 1
@@ -44,12 +46,17 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
   const handleDownload = useCallback(async () => {
     setDownloading(true)
     try {
-      const bytes = await exportPdfWithEdits(document.pdfBytes, editor.blocks, editor.strokes)
+      const bytes = await exportPdfWithEdits(
+        document.pdfBytes,
+        editor.blocks,
+        editor.strokes,
+        editor.signatures,
+      )
       downloadPdf(bytes, document.fileName)
     } finally {
       setDownloading(false)
     }
-  }, [document.fileName, document.pdfBytes, editor.blocks, editor.strokes])
+  }, [document.fileName, document.pdfBytes, editor.blocks, editor.strokes, editor.signatures])
 
   const handleClose = useCallback(async () => {
     if (editor.hasChanges) {
@@ -101,6 +108,10 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
           e.preventDefault()
           editor.deleteBlock(editor.selectedId)
         }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && editor.selectedSignatureId) {
+          e.preventDefault()
+          editor.deleteSignature(editor.selectedSignatureId)
+        }
       }
 
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -121,8 +132,10 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
         return 'Draw on the page to sign or write · Progress auto-saves locally'
       case 'highlighter':
         return 'Drag over the page to highlight · Progress auto-saves locally'
+      case 'signature':
+        return 'Click on the document where your signature should appear'
       default:
-        return 'Select text boxes to edit · Use Pen or Highlight tools from the sidebar'
+        return 'Select text or signatures to move · Use Sign in the sidebar for DocuSign-style signing'
     }
   })()
 
@@ -176,7 +189,11 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
           inkStyle={editor.inkStyle}
           onStyleChange={editor.applyStyleToSelected}
           onInkStyleChange={editor.applyInkStyle}
-          onDelete={() => editor.selectedId && editor.deleteBlock(editor.selectedId)}
+          onDelete={() => {
+            if (editor.selectedId) editor.deleteBlock(editor.selectedId)
+            if (editor.selectedSignatureId) editor.deleteSignature(editor.selectedSignatureId)
+          }}
+          onOpenSignature={() => setSignatureModalOpen(true)}
           pageCount={totalPages}
           currentPage={editor.currentPage}
           onPageChange={editor.setCurrentPage}
@@ -191,13 +208,19 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
           tool={editor.tool}
           blocks={editor.blocks}
           strokes={editor.strokes}
+          signatures={editor.signatures}
           inkStyle={editor.inkStyle}
           selectedId={editor.selectedId}
+          selectedSignatureId={editor.selectedSignatureId}
           extractedPages={editor.extractedPages}
           onSelect={editor.setSelectedId}
+          onSelectSignature={editor.setSelectedSignatureId}
           onUpdateBlock={editor.updateBlock}
           onDeleteBlock={editor.deleteBlock}
+          onUpdateSignature={editor.updateSignature}
+          onDeleteSignature={editor.deleteSignature}
           onAddText={editor.addTextField}
+          onPlaceSignature={editor.placeSignature}
           onStrokeStart={editor.startStroke}
           onStrokeAppend={editor.appendStrokePoint}
           onPageBlocksExtracted={editor.addPageBlocks}
@@ -210,6 +233,15 @@ export function EditorLayout({ document, initialEditor, onClose }: EditorLayoutP
           {editor.hasChanges ? 'Changes saved locally in this browser' : 'All processing happens locally in your browser'}
         </span>
       </footer>
+
+      <SignatureModal
+        open={signatureModalOpen}
+        onClose={() => setSignatureModalOpen(false)}
+        onAdopt={(imageDataUrl) => {
+          setSignatureModalOpen(false)
+          editor.beginSignaturePlacement(imageDataUrl)
+        }}
+      />
     </div>
   )
 }

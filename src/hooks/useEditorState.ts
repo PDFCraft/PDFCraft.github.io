@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import { DEFAULT_SIGNATURE_SIZE } from '../lib/signatureUtils'
 import type {
   EditorTool,
   InkStroke,
   InkStyle,
   SavedEditorState,
+  SignaturePlacement,
   StrokePoint,
   TextBlock,
   TextStyle,
@@ -23,7 +25,10 @@ export function useEditorState(initial?: SavedEditorState) {
   const [tool, setToolState] = useState<EditorTool>(initial?.tool ?? 'select')
   const [blocks, setBlocks] = useState<TextBlock[]>(initial?.blocks ?? [])
   const [strokes, setStrokes] = useState<InkStroke[]>(initial?.strokes ?? [])
+  const [signatures, setSignatures] = useState<SignaturePlacement[]>(initial?.signatures ?? [])
+  const [pendingSignatureImage, setPendingSignatureImage] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(null)
   const [textStyle, setTextStyle] = useState<TextStyle>(initial?.textStyle ?? DEFAULT_STYLE)
   const [inkStyle, setInkStyle] = useState<InkStyle>(initial?.inkStyle ?? DEFAULT_INK_STYLE)
   const [zoom, setZoom] = useState(initial?.zoom ?? 1)
@@ -37,10 +42,64 @@ export function useEditorState(initial?: SavedEditorState) {
   })
 
   const selectedBlock = blocks.find((b) => b.id === selectedId && !b.deleted) ?? null
+  const selectedSignature =
+    signatures.find((s) => s.id === selectedSignatureId) ?? null
 
   const setTool = useCallback((next: EditorTool) => {
     setToolState(next)
-    if (next === 'pen' || next === 'highlighter') setSelectedId(null)
+    if (next === 'pen' || next === 'highlighter') {
+      setSelectedId(null)
+      setSelectedSignatureId(null)
+    }
+    if (next !== 'signature') {
+      setPendingSignatureImage(null)
+    }
+  }, [])
+
+  const setSelectedIdWrapped = useCallback((id: string | null) => {
+    setSelectedId(id)
+    if (id) setSelectedSignatureId(null)
+  }, [])
+
+  const setSelectedSignatureIdWrapped = useCallback((id: string | null) => {
+    setSelectedSignatureId(id)
+    if (id) setSelectedId(null)
+  }, [])
+
+  const beginSignaturePlacement = useCallback((imageDataUrl: string) => {
+    setPendingSignatureImage(imageDataUrl)
+    setToolState('signature')
+    setSelectedId(null)
+    setSelectedSignatureId(null)
+  }, [])
+
+  const placeSignature = useCallback(
+    (pageIndex: number, x: number, y: number) => {
+      if (!pendingSignatureImage) return
+      const placement: SignaturePlacement = {
+        id: uuidv4(),
+        pageIndex,
+        x: x - DEFAULT_SIGNATURE_SIZE.width / 2,
+        y: y - DEFAULT_SIGNATURE_SIZE.height / 2,
+        width: DEFAULT_SIGNATURE_SIZE.width,
+        height: DEFAULT_SIGNATURE_SIZE.height,
+        imageDataUrl: pendingSignatureImage,
+      }
+      setSignatures((prev) => [...prev, placement])
+      setSelectedSignatureIdWrapped(placement.id)
+      setPendingSignatureImage(null)
+      setToolState('select')
+    },
+    [pendingSignatureImage, setSelectedSignatureIdWrapped],
+  )
+
+  const updateSignature = useCallback((id: string, patch: Partial<SignaturePlacement>) => {
+    setSignatures((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
+  }, [])
+
+  const deleteSignature = useCallback((id: string) => {
+    setSignatures((prev) => prev.filter((s) => s.id !== id))
+    setSelectedSignatureId((cur) => (cur === id ? null : cur))
   }, [])
 
   const addPageBlocks = useCallback((pageIndex: number, pdfBlocks: TextBlock[]) => {
@@ -72,10 +131,10 @@ export function useEditorState(initial?: SavedEditorState) {
         source: 'user',
       }
       setBlocks((prev) => [...prev, block])
-      setSelectedId(block.id)
+      setSelectedIdWrapped(block.id)
       setTool('select')
     },
-    [setTool, textStyle],
+    [setSelectedIdWrapped, setTool, textStyle],
   )
 
   const updateBlock = useCallback((id: string, patch: Partial<TextBlock>) => {
@@ -145,7 +204,10 @@ export function useEditorState(initial?: SavedEditorState) {
   const reset = useCallback(() => {
     setBlocks([])
     setStrokes([])
+    setSignatures([])
+    setPendingSignatureImage(null)
     setSelectedId(null)
+    setSelectedSignatureId(null)
     setToolState('select')
     setZoom(1)
     setCurrentPage(0)
@@ -158,6 +220,7 @@ export function useEditorState(initial?: SavedEditorState) {
     (): SavedEditorState => ({
       blocks,
       strokes,
+      signatures,
       tool,
       textStyle,
       inkStyle,
@@ -165,25 +228,35 @@ export function useEditorState(initial?: SavedEditorState) {
       currentPage,
       extractedPages,
     }),
-    [blocks, strokes, tool, textStyle, inkStyle, zoom, currentPage, extractedPages],
+    [blocks, strokes, signatures, tool, textStyle, inkStyle, zoom, currentPage, extractedPages],
   )
 
   const hasChanges = useMemo(() => {
     const hasBlockEdits = blocks.some((b) => b.source === 'user' || b.modified || b.deleted)
     const hasInk = strokes.some((s) => s.points.length >= 2)
-    return hasBlockEdits || hasInk
-  }, [blocks, strokes])
+    const hasSignatures = signatures.length > 0
+    return hasBlockEdits || hasInk || hasSignatures
+  }, [blocks, strokes, signatures])
 
   return {
     tool,
     setTool,
     blocks,
     strokes,
+    signatures,
+    pendingSignatureImage,
     selectedId,
-    setSelectedId,
+    setSelectedId: setSelectedIdWrapped,
+    selectedSignatureId,
+    setSelectedSignatureId: setSelectedSignatureIdWrapped,
     selectedBlock,
+    selectedSignature,
     textStyle,
     inkStyle,
+    beginSignaturePlacement,
+    placeSignature,
+    updateSignature,
+    deleteSignature,
     addPageBlocks,
     addTextField,
     updateBlock,

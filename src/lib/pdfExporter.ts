@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
-import type { InkStroke, TextBlock } from '../types/editor'
+import type { InkStroke, SignaturePlacement, TextBlock } from '../types/editor'
 
 /** Small bleed so anti-aliased PDF text edges are fully covered. */
 const WHITE_OUT_PADDING = 2
@@ -87,9 +87,40 @@ function drawStrokesOnPage(
         thickness: stroke.width,
         color,
         opacity: stroke.opacity,
-        lineCap: 1, // Round
+        lineCap: 1,
       })
     }
+  }
+}
+
+async function embedDataUrlImage(
+  pdfDoc: PDFDocument,
+  dataUrl: string,
+) {
+  const base64 = dataUrl.split(',')[1]
+  if (!base64) throw new Error('Invalid signature image')
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+  if (dataUrl.startsWith('data:image/png')) return pdfDoc.embedPng(bytes)
+  if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
+    return pdfDoc.embedJpg(bytes)
+  }
+  return pdfDoc.embedPng(bytes)
+}
+
+async function drawSignaturesOnPage(
+  page: ReturnType<PDFDocument['getPage']>,
+  pageHeight: number,
+  pdfDoc: PDFDocument,
+  signatures: SignaturePlacement[],
+) {
+  for (const sig of signatures) {
+    const image = await embedDataUrlImage(pdfDoc, sig.imageDataUrl)
+    page.drawImage(image, {
+      x: sig.x,
+      y: pageHeight - sig.y - sig.height,
+      width: sig.width,
+      height: sig.height,
+    })
   }
 }
 
@@ -97,6 +128,7 @@ export async function exportPdfWithEdits(
   pdfBytes: Uint8Array,
   blocks: TextBlock[],
   strokes: InkStroke[] = [],
+  signatures: SignaturePlacement[] = [],
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.load(pdfBytes)
   const fonts = {
@@ -120,13 +152,21 @@ export async function exportPdfWithEdits(
     strokesByPage.set(stroke.pageIndex, list)
   }
 
-  const pageIndices = new Set([...byPage.keys(), ...strokesByPage.keys()])
+  const signaturesByPage = new Map<number, SignaturePlacement[]>()
+  for (const sig of signatures) {
+    const list = signaturesByPage.get(sig.pageIndex) ?? []
+    list.push(sig)
+    signaturesByPage.set(sig.pageIndex, list)
+  }
+
+  const pageIndices = new Set([...byPage.keys(), ...strokesByPage.keys(), ...signaturesByPage.keys()])
 
   for (const pageIndex of pageIndices) {
     const page = pdfDoc.getPage(pageIndex)
     const { height: pageHeight } = page.getSize()
     const pageBlocks = byPage.get(pageIndex) ?? []
     const pageStrokes = strokesByPage.get(pageIndex) ?? []
+    const pageSignatures = signaturesByPage.get(pageIndex) ?? []
 
     // Pass 1: white-out only the visible box (and former location if text was moved)
     for (const block of pageBlocks) {
@@ -157,6 +197,9 @@ export async function exportPdfWithEdits(
 
     // Pass 3: pen and highlighter strokes
     drawStrokesOnPage(page, pageHeight, pageStrokes)
+
+    // Pass 4: signatures
+    await drawSignaturesOnPage(page, pageHeight, pdfDoc, pageSignatures)
   }
 
   return pdfDoc.save()

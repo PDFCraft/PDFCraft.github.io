@@ -57,7 +57,10 @@ function App() {
         setSavedSession(null)
         return
       }
-      setInitialEditor(stored.session.editor)
+      setInitialEditor({
+        ...stored.session.editor,
+        signatures: stored.session.editor.signatures ?? [],
+      })
       setDocument({
         fileName: stored.session.fileName,
         pdfBytes: stored.pdfBytes,

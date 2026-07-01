@@ -1,3 +1,15 @@
+export function IconSign() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 20c4-8 8-12 16-14" />
+      <path d="M12 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z" opacity="0" />
+      <path d="M15 4l5 5" />
+      <path d="M14 9l-9 9" />
+      <path d="M5 18l2 2" />
+    </svg>
+  )
+}
+
 export function IconHighlighter() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
