@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { PDFPageProxy } from 'pdfjs-dist'
 import type { RenderTask } from 'pdfjs-dist'
-import type { EditorTool, TextBlock } from '../types/editor'
+import type { EditorTool, InkStroke, InkStyle, TextBlock } from '../types/editor'
 import { EditableTextBlock } from './EditableTextBlock'
+import { InkLayer } from './InkLayer'
 import './PdfPage.css'
 
 interface PdfPageProps {
@@ -10,11 +11,15 @@ interface PdfPageProps {
   pageIndex: number
   scale: number
   blocks: TextBlock[]
+  strokes: InkStroke[]
+  inkStyle: InkStyle
   selectedId: string | null
   onSelect: (id: string | null) => void
   onUpdateBlock: (id: string, patch: Partial<TextBlock>) => void
   onDeleteBlock: (id: string) => void
   onAddText: (pageIndex: number, pdfX: number, pdfY: number) => void
+  onStrokeStart: (pageIndex: number, point: { x: number; y: number }, tool: 'pen' | 'highlighter') => string
+  onStrokeAppend: (id: string, point: { x: number; y: number }) => void
   tool: EditorTool
 }
 
@@ -23,11 +28,15 @@ export function PdfPage({
   pageIndex,
   scale,
   blocks,
+  strokes,
+  inkStyle,
   selectedId,
   onSelect,
   onUpdateBlock,
   onDeleteBlock,
   onAddText,
+  onStrokeStart,
+  onStrokeAppend,
   tool,
 }: PdfPageProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -37,6 +46,8 @@ export function PdfPage({
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string | null>(null)
   const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 })
+
+  const isDrawingTool = tool === 'pen' || tool === 'highlighter'
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current
@@ -93,6 +104,7 @@ export function PdfPage({
   }, [page, scale])
 
   const handlePageMouseDown = (e: React.MouseEvent) => {
+    if (isDrawingTool) return
     if ((e.target as HTMLElement).closest('.text-block')) return
     if (tool === 'select') onSelect(null)
   }
@@ -119,6 +131,16 @@ export function PdfPage({
     >
       <canvas ref={canvasRef} className="pdf-page__canvas" />
       <div className="pdf-page__overlay">
+        <InkLayer
+          pageIndex={pageIndex}
+          scale={scale}
+          strokes={strokes}
+          tool={tool}
+          inkStyle={inkStyle}
+          onStrokeStart={onStrokeStart}
+          onStrokeAppend={onStrokeAppend}
+          containerRef={containerRef}
+        />
         {pageBlocks.map((block) => (
           <EditableTextBlock
             key={block.id}

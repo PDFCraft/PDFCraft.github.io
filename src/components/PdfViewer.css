@@ -14,7 +14,8 @@
   cursor: grabbing;
 }
 
-.pdf-viewer--text {
+.pdf-viewer--text,
+.pdf-viewer--draw {
   cursor: crosshair;
 }
 

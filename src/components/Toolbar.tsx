@@ -1,11 +1,14 @@
-import { IconDownload, IconZoomIn, IconZoomOut } from './icons'
+import { IconDownload, IconSave, IconZoomIn, IconZoomOut } from './icons'
 import './Toolbar.css'
 
 interface ToolbarProps {
   zoom: number
   onZoomChange: (zoom: number) => void
   onDownload: () => void
+  onSave: () => void
   downloading: boolean
+  saving: boolean
+  saveNotice: string | null
   fileName: string
   onClose: () => void
   currentPage: number
@@ -17,7 +20,10 @@ export function Toolbar({
   zoom,
   onZoomChange,
   onDownload,
+  onSave,
   downloading,
+  saving,
+  saveNotice,
   fileName,
   onClose,
   currentPage,
@@ -55,6 +61,7 @@ export function Toolbar({
             <IconZoomIn />
           </button>
         </div>
+        {saveNotice && <span className="toolbar__save-notice">{saveNotice}</span>}
       </div>
 
       <div className="toolbar__right">
@@ -79,6 +86,16 @@ export function Toolbar({
             ›
           </button>
         </div>
+
+        <button
+          type="button"
+          className="toolbar__icon-btn toolbar__save-btn"
+          onClick={onSave}
+          disabled={saving}
+          title="Save progress locally (Ctrl+S)"
+        >
+          <IconSave />
+        </button>
 
         <button
           type="button"

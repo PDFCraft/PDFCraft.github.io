@@ -166,6 +166,66 @@
   color: var(--accent);
 }
 
+.edit-sidebar__tools {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.edit-sidebar__tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-base);
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.edit-sidebar__tool:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.edit-sidebar__tool--active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.edit-sidebar__ink-sizes {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.edit-sidebar__ink-size {
+  width: 40px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-base);
+  cursor: pointer;
+  padding: 0;
+}
+
+.edit-sidebar__ink-size span {
+  display: block;
+  border-radius: 2px;
+}
+
+.edit-sidebar__ink-size--active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+
 .edit-sidebar__pages {
   display: flex;
   flex-wrap: wrap;

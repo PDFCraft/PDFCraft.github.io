@@ -6,9 +6,28 @@ interface UploadScreenProps {
   onFileSelect: (file: File) => void
   loading?: boolean
   error?: string | null
+  savedSession?: { fileName: string; savedAt: number } | null
+  onResume?: () => void
+  onDiscardSaved?: () => void
 }
 
-export function UploadScreen({ onFileSelect, loading, error }: UploadScreenProps) {
+function formatSavedTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+export function UploadScreen({
+  onFileSelect,
+  loading,
+  error,
+  savedSession,
+  onResume,
+  onDiscardSaved,
+}: UploadScreenProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
 
@@ -34,10 +53,31 @@ export function UploadScreen({ onFileSelect, loading, error }: UploadScreenProps
       <div className="upload-screen__hero">
         <h1>PDF Text Editor</h1>
         <p className="upload-screen__subtitle">
-          Add and edit text on any PDF — graphic, scanned, or text-based. Everything
-          stays in your browser. Nothing is uploaded.
+          Edit text, sign with pen, and highlight PDFs in your browser. Everything
+          stays on your device — nothing is uploaded.
         </p>
       </div>
+
+      {savedSession && onResume && (
+        <div className="upload-resume">
+          <div className="upload-resume__info">
+            <strong>Resume your last session</strong>
+            <span>
+              {savedSession.fileName} · saved {formatSavedTime(savedSession.savedAt)}
+            </span>
+          </div>
+          <div className="upload-resume__actions">
+            <button type="button" className="upload-resume__btn" onClick={onResume} disabled={loading}>
+              Resume editing
+            </button>
+            {onDiscardSaved && (
+              <button type="button" className="upload-resume__discard" onClick={onDiscardSaved}>
+                Discard
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div
         className={`upload-dropzone ${dragOver ? 'upload-dropzone--active' : ''} ${loading ? 'upload-dropzone--loading' : ''}`}
@@ -97,17 +137,17 @@ export function UploadScreen({ onFileSelect, loading, error }: UploadScreenProps
           </div>
         </div>
         <div className="upload-feature">
-          <span className="upload-feature__badge">T</span>
+          <span className="upload-feature__badge">✎</span>
           <div>
-            <strong>Text editing</strong>
-            <span>Add, move, and style text boxes on any page</span>
+            <strong>Pen &amp; highlighter</strong>
+            <span>Sign documents and highlight key sections</span>
           </div>
         </div>
         <div className="upload-feature">
-          <span className="upload-feature__badge">↓</span>
+          <span className="upload-feature__badge">↻</span>
           <div>
-            <strong>Instant download</strong>
-            <span>Export your edited PDF with one click</span>
+            <strong>Auto-save locally</strong>
+            <span>Resume your edits after refreshing the page</span>
           </div>
         </div>
       </div>

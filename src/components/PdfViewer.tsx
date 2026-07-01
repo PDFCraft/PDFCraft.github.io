@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
-import type { EditorTool, TextBlock } from '../types/editor'
+import type { EditorTool, InkStroke, InkStyle, TextBlock } from '../types/editor'
 import { extractPageText } from '../lib/extractPageText'
 import { PdfPage } from './PdfPage'
 import './PdfViewer.css'
@@ -13,11 +13,16 @@ interface PdfViewerProps {
   onScaleChange: (scale: number) => void
   tool: EditorTool
   blocks: TextBlock[]
+  strokes: InkStroke[]
+  inkStyle: InkStyle
   selectedId: string | null
+  extractedPages: number[]
   onSelect: (id: string | null) => void
   onUpdateBlock: (id: string, patch: Partial<TextBlock>) => void
   onDeleteBlock: (id: string) => void
   onAddText: (pageIndex: number, x: number, y: number) => void
+  onStrokeStart: (pageIndex: number, point: { x: number; y: number }, tool: 'pen' | 'highlighter') => string
+  onStrokeAppend: (id: string, point: { x: number; y: number }) => void
   onPageBlocksExtracted: (pageIndex: number, blocks: TextBlock[]) => void
 }
 
@@ -35,11 +40,16 @@ export function PdfViewer({
   onScaleChange,
   tool,
   blocks,
+  strokes,
+  inkStyle,
   selectedId,
+  extractedPages,
   onSelect,
   onUpdateBlock,
   onDeleteBlock,
   onAddText,
+  onStrokeStart,
+  onStrokeAppend,
   onPageBlocksExtracted,
 }: PdfViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null)
@@ -47,7 +57,11 @@ export function PdfViewer({
   const [pageLoading, setPageLoading] = useState(true)
   const [pageError, setPageError] = useState<string | null>(null)
   const fitApplied = useRef(false)
-  const extractedRef = useRef(new Set<number>())
+  const extractedRef = useRef(new Set<number>(extractedPages))
+
+  useEffect(() => {
+    extractedRef.current = new Set(extractedPages)
+  }, [extractedPages])
 
   useEffect(() => {
     let cancelled = false
@@ -94,7 +108,8 @@ export function PdfViewer({
     extractedRef.current = new Set()
   }, [pdf])
 
-  const cursorClass = tool === 'text' ? 'pdf-viewer--text' : ''
+  const cursorClass =
+    tool === 'text' || tool === 'pen' || tool === 'highlighter' ? 'pdf-viewer--draw' : ''
 
   return (
     <div ref={viewerRef} className={`pdf-viewer ${cursorClass}`}>
@@ -114,11 +129,15 @@ export function PdfViewer({
             pageIndex={currentPage}
             scale={scale}
             blocks={blocks}
+            strokes={strokes}
+            inkStyle={inkStyle}
             selectedId={selectedId}
             onSelect={onSelect}
             onUpdateBlock={onUpdateBlock}
             onDeleteBlock={onDeleteBlock}
             onAddText={onAddText}
+            onStrokeStart={onStrokeStart}
+            onStrokeAppend={onStrokeAppend}
             tool={tool}
           />
         )}

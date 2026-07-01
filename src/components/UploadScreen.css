@@ -110,6 +110,73 @@
   font-size: 0.875rem;
 }
 
+.upload-resume {
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--accent-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.upload-resume__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.upload-resume__info strong {
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.upload-resume__info span {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.upload-resume__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.upload-resume__btn {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-resume__btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.upload-resume__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-resume__discard {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .upload-features {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -218,6 +218,17 @@
   cursor: not-allowed;
 }
 
+.toolbar__save-notice {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.toolbar__save-btn {
+  border: 1px solid var(--border);
+}
+
 .toolbar--minimal .toolbar__center {
   display: flex;
 }

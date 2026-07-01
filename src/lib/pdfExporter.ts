@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
-import type { TextBlock } from '../types/editor'
+import type { InkStroke, TextBlock } from '../types/editor'
 
 /** Small bleed so anti-aliased PDF text edges are fully covered. */
 const WHITE_OUT_PADDING = 2
@@ -70,9 +70,33 @@ function drawWhiteOut(page: ReturnType<PDFDocument['getPage']>, pageHeight: numb
   })
 }
 
+function drawStrokesOnPage(
+  page: ReturnType<PDFDocument['getPage']>,
+  pageHeight: number,
+  strokes: InkStroke[],
+) {
+  for (const stroke of strokes) {
+    if (stroke.points.length < 2) continue
+    const color = hexToRgb(stroke.color)
+    for (let i = 1; i < stroke.points.length; i++) {
+      const prev = stroke.points[i - 1]
+      const curr = stroke.points[i]
+      page.drawLine({
+        start: { x: prev.x, y: pageHeight - prev.y },
+        end: { x: curr.x, y: pageHeight - curr.y },
+        thickness: stroke.width,
+        color,
+        opacity: stroke.opacity,
+        lineCap: 1, // Round
+      })
+    }
+  }
+}
+
 export async function exportPdfWithEdits(
   pdfBytes: Uint8Array,
   blocks: TextBlock[],
+  strokes: InkStroke[] = [],
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.load(pdfBytes)
   const fonts = {
@@ -89,9 +113,20 @@ export async function exportPdfWithEdits(
     byPage.set(block.pageIndex, list)
   }
 
-  for (const [pageIndex, pageBlocks] of byPage) {
+  const strokesByPage = new Map<number, InkStroke[]>()
+  for (const stroke of strokes) {
+    const list = strokesByPage.get(stroke.pageIndex) ?? []
+    list.push(stroke)
+    strokesByPage.set(stroke.pageIndex, list)
+  }
+
+  const pageIndices = new Set([...byPage.keys(), ...strokesByPage.keys()])
+
+  for (const pageIndex of pageIndices) {
     const page = pdfDoc.getPage(pageIndex)
     const { height: pageHeight } = page.getSize()
+    const pageBlocks = byPage.get(pageIndex) ?? []
+    const pageStrokes = strokesByPage.get(pageIndex) ?? []
 
     // Pass 1: white-out only the visible box (and former location if text was moved)
     for (const block of pageBlocks) {
@@ -119,6 +154,9 @@ export async function exportPdfWithEdits(
         lineHeight: block.fontSize * 1.25,
       })
     }
+
+    // Pass 3: pen and highlighter strokes
+    drawStrokesOnPage(page, pageHeight, pageStrokes)
   }
 
   return pdfDoc.save()

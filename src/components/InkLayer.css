@@ -1,0 +1,16 @@
+.ink-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ink-layer--drawing {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.ink-layer__stroke--highlighter {
+  mix-blend-mode: multiply;
+}
